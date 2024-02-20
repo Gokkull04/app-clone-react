@@ -1,7 +1,12 @@
 import React, { useState } from 'react'
 import { AiFillEyeInvisible,AiFillEye } from "react-icons/ai";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import { getAuth,createUserWithEmailAndPassword,updateProfile } from "firebase/auth";
+import {db} from "../firebase";
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import {toast} from 'react-toastify';
+
 
 export default function SignUp() {
 
@@ -13,14 +18,36 @@ export default function SignUp() {
   })
 
   const {name,email,password} = formData;
+  const navigate = useNavigate();
 
   function onChange(e){
     setForm((prevState)=>({
       ...prevState,
       [e.target.id] : e.target.value
     }))
+ }
+ async function onSubmit(e){
+  e.preventDefault()
 
+
+  try {
+    const auth = getAuth();
+    const userCredential = await
+    createUserWithEmailAndPassword(auth,email,password); 
+    updateProfile(auth.currentUser,{
+      displayName: name
+    })
+    const user = userCredential.user;
+    const formDataCopy = {...formData}
+    delete formDataCopy.password
+    formDataCopy.timestamp = serverTimestamp();
+    await setDoc(doc(db,"users",user.uid),formDataCopy)
+    navigate("/")
+
+  } catch (error) {
+    toast.error("Something went wrong !!!")
   }
+}
 
   return (
     <section>
@@ -33,7 +60,7 @@ export default function SignUp() {
       </div>
 
       <div className='width-full md:w-[60%] lg:w-[40%] lg:ml-20'>
-        <form>
+        <form onSubmit={onSubmit}>
         <input 
         type="name" 
         id='name' 
@@ -74,7 +101,7 @@ export default function SignUp() {
         <div className='flex justify-between whitespace-nowrap text-sm sm:text-lg'>
           <p className='mb-6'>Have an account?
           <Link to="/Sign-in" 
-          className=' text-red-600 hover:text-red-700 transition duration-200 ease-in-out ml-1'>Sign-In</Link>
+          className=' text-red-600 hover:text-red-700 transition duration-200 ease-in-out ml-1'>Sign-in</Link>
           </p>
           <p>
             <Link to="/Forgot-password" 
@@ -83,7 +110,7 @@ export default function SignUp() {
         </div>
         <button className='w-full uppercase bg-blue-600 rounded px-7 py-3 text-sm text-white shadow-md font-medium hover:bg-blue-700 transition duration-200 ease-in-out hover:shadow-lg active:bg-blue-800'
         type='submit'>
-          Sign-In
+          Sign-Up
         </button>
 
         <div className='flex items-center my-4 before:border-t before:flex-1 before:border-gray-300 after:border-t after:flex-1 after:border-gray-300'>
