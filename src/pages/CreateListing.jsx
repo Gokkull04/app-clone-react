@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {getAuth} from 'firebase/auth';
 import {v4 as uuidv4} from 'uuid';
-import {addDoc, collection, serverTimestamp} from 'firebase/firestore';
+import {addDoc, collection, query, serverTimestamp, where} from 'firebase/firestore';
 import {db} from '../firebase';
 import {useNavigate} from 'react-router-dom';
 
@@ -109,7 +109,10 @@ export default function CreateListing() {
       });
       
       const formDataCopy = {
-        ...formData, imgUrls, timestamp: serverTimestamp()
+        ...formData,
+         imgUrls,
+         timestamp: serverTimestamp(),
+         userRef : auth.currentUser.uid, 
       };
       delete formDataCopy.images;
       !formDataCopy.offer && delete formDataCopy.discountedPrice;
@@ -124,6 +127,8 @@ export default function CreateListing() {
   if(loading){
     return <Spinner/>
   }
+
+  
 
   return (
     <div className='max-w-md px-2 mx-auto'>
